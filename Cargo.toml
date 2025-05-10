@@ -1,0 +1,15 @@
+[package]
+name = "rustedbytes-bbj"
+version = "0.1.0"
+edition = "2024"
+authors = ["Your Name <your.email@example.com>"]
+description = "A complete BytePusher virtual machine implementation in Rust"
+readme = "README.md"
+license = "MIT"
+keywords = ["vm", "emulator", "bytepusher"]
+categories = ["emulators"]
+
+[dependencies]
+chrono = { version = "0.4.39", default-features = false, features = ["now"] }
+minifb = "0.28.0"
+rodio = { version = "0.20.1", default-features = false }
