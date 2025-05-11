@@ -1,4 +1,4 @@
-const MEMORY_SIZE: usize = 16 * 1024 * 1024; // 16MB
+const MEMORY_SIZE: usize = 16 * 1024 * 1024; // 16MiB
 
 pub const SCREEN_WIDTH: usize = 256;
 pub const SCREEN_HEIGHT: usize = 256;
@@ -24,8 +24,6 @@ impl Default for Cpu {
         Self {
             program_counter: 0x200,
             memory: vec![0; MEMORY_SIZE],
-            //palette,
-            //screen: [0; SCREEN_WIDTH * SCREEN_HEIGHT],
         }
     }
 }

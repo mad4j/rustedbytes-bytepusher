@@ -14,16 +14,9 @@ use crate::{
 };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut cpu = Cpu::default();
-    let audio_handler = AudioHandler::new();
-    let mut keyboard_handler = KeyboardHandler::new();
-    let mut screen_handler = screen::ScreenHandler::new();
-
-    let filename = env::args().nth(1).ok_or("usage: kpsh FILE_PATH")?;
-    let rom_as_vec = fs::read(&filename)?;
-
+    
     let mut window = Window::new(
-        &format!("RustedBytes - BytePusher - {}", filename),
+        &format!("RustedBytes - BytePusher "),
         SCREEN_WIDTH,
         SCREEN_HEIGHT,
         WindowOptions {
@@ -32,10 +25,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         },
     )?;
 
-    cpu.load_rom(&rom_as_vec);
-
     let (_stream, stream_handle) = OutputStream::try_default()?;
     let sink = Sink::try_new(&stream_handle)?;
+
+    let mut cpu = Cpu::default();
+    let audio_handler = AudioHandler::new();
+    let mut keyboard_handler = KeyboardHandler::new();
+    let mut screen_handler = screen::ScreenHandler::new();
+
+    let filename = env::args().nth(1).ok_or("usage: kpsh FILE_PATH")?;
+    let rom_as_vec = fs::read(&filename)?;
+
+    cpu.load_rom(&rom_as_vec);
 
     let frame_duration = std::time::Duration::from_millis(16);
 
