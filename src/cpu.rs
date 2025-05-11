@@ -1,11 +1,11 @@
-const MEMORY_SIZE: usize = 16_777_216;
+const MEMORY_SIZE: usize = 16 * 1024 * 1024; // 16MB
 
 pub const SCREEN_WIDTH: usize = 256;
 pub const SCREEN_HEIGHT: usize = 256;
 
 //use bit_struct::u24;
 
-pub struct Emulator {
+pub struct Cpu {
     program_counter: usize,
     palette: [u32; 256],
     pub memory: Vec<u8>,
@@ -14,7 +14,8 @@ pub struct Emulator {
     pub keys: [bool; 16],
 }
 
-impl Default for Emulator {
+impl Default for Cpu {
+
     fn default() -> Self {
         // Generate palette attribute beforehand (so we don't have to parse it every time)
         let mut palette: [u32; 256] = [0; 256];
@@ -38,26 +39,22 @@ impl Default for Emulator {
     }
 }
 
-impl Emulator {
-    pub fn load_rom(&mut self, rom: Vec<u8>) {
-        self.memory[0..rom.len()].copy_from_slice(rom.as_slice());
+impl Cpu {
+
+    pub fn load_rom(&mut self, rom: &[u8]) {
+        self.memory[..rom.len()].copy_from_slice(rom);
     }
 
     pub fn render(&mut self, new_frame: [u8; 65536]) {
-        /*self.screen = new_frame
-        .iter()
-        .map(|val| self.palette[*val as usize])
-        .collect::<Vec<u32>>()
-        .try_into()
-        .unwrap();*/
-        for (idx, val) in new_frame.iter().enumerate() {
-            //dbg!(val, self.palette[*val as usize]);
-            self.screen[idx] = self.palette[*val as usize];
-        }
+        // Copy the new frame into the screen buffer using the palette
+        self.screen.iter_mut().zip(new_frame.iter()).for_each(|(screen_pixel, &frame_pixel)| {
+            *screen_pixel = self.palette[frame_pixel as usize];
+        });
     }
 
+    #[inline(always)]
     fn read_24_bits(&self, slice: &[u8]) -> usize {
-        ((slice[0] as usize) << 16) | ((slice[1] as usize) << 8) | slice[2] as usize
+        (u32::from_be_bytes([slice[0], slice[1], slice[2], 0]) >> 8) as usize
     }
 
     /*fn read_opcode(&self) -> (usize, usize, usize) {

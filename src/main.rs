@@ -3,10 +3,10 @@ use minifb::{Key, KeyRepeat, Scale, Window, WindowOptions};
 use rodio::{OutputStream, Sink};
 use std::{env, fs, io::Write, path::Path};
 
-mod emu;
+mod cpu;
 mod sound;
 use crate::{
-    emu::{Emulator, SCREEN_HEIGHT, SCREEN_WIDTH},
+    cpu::{Cpu, SCREEN_HEIGHT, SCREEN_WIDTH},
     sound::SampleBufferSource,
 };
 
@@ -35,7 +35,7 @@ fn key_to_hex(key: Key) -> Option<u8> {
 }
 
 fn main() -> Result<(), minifb::Error> {
-    let mut emu = Emulator::default();
+    let mut emu = Cpu::default();
 
     let filename = env::args().nth(1).expect("usage: kpsh FILE_PATH");
 
@@ -55,7 +55,7 @@ fn main() -> Result<(), minifb::Error> {
     };
     window.set_target_fps(60);
 
-    emu.load_rom(rom_as_vec);
+    emu.load_rom(&rom_as_vec);
 
     let (_stream, stream_handle) =
         OutputStream::try_default().expect("unable to create audio output stream");

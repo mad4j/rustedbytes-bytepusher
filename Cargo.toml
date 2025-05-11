@@ -1,5 +1,5 @@
 [package]
-name = "rustedbytes-bbj"
+name = "rustedbytes-bytepusher"
 version = "0.1.0"
 edition = "2024"
 authors = ["Your Name <your.email@example.com>"]
