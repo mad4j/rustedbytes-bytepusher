@@ -63,9 +63,13 @@ impl Cpu {
         self.program_counter = addr_jump;
     }
 
-    #[inline(always)]
-    pub fn tick(&mut self, key_values: u16) {
+    pub fn update_keyboard_state(&mut self, key_values: u16) {
         self.memory[0..2].copy_from_slice(&key_values.to_be_bytes());
+    }
+
+    #[inline(always)]
+    pub fn tick(&mut self) {
+        //self.memory[0..2].copy_from_slice(&key_values.to_be_bytes());
 
         self.program_counter = self.read_24_bits(&self.memory[2..5]);
 

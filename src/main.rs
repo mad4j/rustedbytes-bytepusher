@@ -21,7 +21,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let rom_as_vec = fs::read(&filename)?;
 
     let mut window = Window::new(
-        &format!("kpsh - {}", filename),
+        &format!("RustedBytes - BytePusher - {}", filename),
         SCREEN_WIDTH,
         SCREEN_HEIGHT,
         WindowOptions {
@@ -40,9 +40,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     while window.is_open() && !window.is_key_down(Key::Escape) {
         let start = std::time::Instant::now();
     
-        let key_values = keyboard_handler.get_key_values(&window);
+        keyboard_handler.handle_events(&window);
+        cpu.update_keyboard_state(keyboard_handler.get_keyboard_state());
 
-        cpu.tick(key_values);
+        cpu.tick();
 
         audio_handler.update_sample_buffer(&cpu.memory);
         audio_handler.append_to_sink(&sink);
