@@ -4,10 +4,10 @@ use rodio::{OutputStream, Sink};
 use std::{env, fs, io::Write, path::Path};
 
 mod cpu;
-mod sound;
+mod audio;
 use crate::{
     cpu::{Cpu, SCREEN_HEIGHT, SCREEN_WIDTH},
-    sound::SampleBufferSource,
+    audio::SampleBufferSource,
 };
 
 fn key_to_hex(key: Key) -> Option<u8> {
