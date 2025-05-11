@@ -8,7 +8,6 @@ pub struct Cpu {
     palette: [u32; 256],
     pub memory: Vec<u8>,
     pub screen: [u32; SCREEN_WIDTH * SCREEN_HEIGHT],
-    pub keys: [bool; 16],
 }
 
 impl Default for Cpu {
@@ -29,7 +28,6 @@ impl Default for Cpu {
             memory: vec![0; MEMORY_SIZE],
             palette,
             screen: [0; SCREEN_WIDTH * SCREEN_HEIGHT],
-            keys: [false; 16],
         }
     }
 }
@@ -66,10 +64,7 @@ impl Cpu {
     }
 
     #[inline(always)]
-    pub fn tick(&mut self) {
-        let key_values: u16 = self.keys.iter().enumerate().fold(0, |acc, (i, &b)| {
-            acc | ((b as u16) << i)
-        });
+    pub fn tick(&mut self, key_values: u16) {
         self.memory[0..2].copy_from_slice(&key_values.to_be_bytes());
 
         self.program_counter = self.read_24_bits(&self.memory[2..5]);

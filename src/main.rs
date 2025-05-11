@@ -5,36 +5,18 @@ use std::{env, fs, io::Write, path::Path};
 
 mod cpu;
 mod audio;
+mod keyboard;
+
 use crate::{
     cpu::{Cpu, SCREEN_HEIGHT, SCREEN_WIDTH},
     audio::AudioHandler,
+    keyboard::KeyboardHandler,
 };
-
-fn key_to_hex(key: Key) -> Option<u8> {
-    match key {
-        Key::Key1 => Some(0x1),
-        Key::Key2 => Some(0x2),
-        Key::Key3 => Some(0x3),
-        Key::Key4 => Some(0xC),
-        Key::Q => Some(0x4),
-        Key::W => Some(0x5),
-        Key::E => Some(0x6),
-        Key::R => Some(0xD),
-        Key::A => Some(0x7),
-        Key::S => Some(0x8),
-        Key::D => Some(0x9),
-        Key::F => Some(0xE),
-        Key::Z => Some(0xA),
-        Key::X => Some(0x0),
-        Key::C => Some(0xB),
-        Key::V => Some(0xF),
-        _ => None,
-    }
-}
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut cpu = Cpu::default();
     let mut audio_handler = AudioHandler::new();
+    let mut keyboard_handler = KeyboardHandler::new();
 
     let filename = env::args().nth(1).ok_or("usage: kpsh FILE_PATH")?;
     let rom_as_vec = fs::read(&filename)?;
@@ -59,17 +41,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     while window.is_open() && !window.is_key_down(Key::Escape) {
         let start = std::time::Instant::now();
 
-        for key in window.get_keys_pressed(KeyRepeat::No) {
-            if let Some(hex) = key_to_hex(key) {
-                cpu.keys[hex as usize] = true;
-            }
-        }
-
-        for key in window.get_keys_released() {
-            if let Some(hex) = key_to_hex(key) {
-                cpu.keys[hex as usize] = false;
-            }
-        }
+        let key_values = keyboard_handler.get_key_values(&window);
 
         if window.is_key_pressed(Key::M, KeyRepeat::No) {
             let timestamp = Utc::now().format("%Y-%m-%dT%H:%M:%S%.3f");
@@ -83,7 +55,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             file.write_all(cpu.memory.as_slice())?;
         }
 
-        cpu.tick();
+        cpu.tick(key_values);
         audio_handler.update_sample_buffer(&cpu.memory);
         audio_handler.append_to_sink(&sink);
 
