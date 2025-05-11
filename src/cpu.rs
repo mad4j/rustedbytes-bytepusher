@@ -5,9 +5,7 @@ pub const SCREEN_HEIGHT: usize = 256;
 
 pub struct Cpu {
     program_counter: usize,
-    palette: [u32; 256],
     pub memory: Vec<u8>,
-    pub screen: [u32; SCREEN_WIDTH * SCREEN_HEIGHT],
 }
 
 impl Default for Cpu {
@@ -26,8 +24,8 @@ impl Default for Cpu {
         Self {
             program_counter: 0x200,
             memory: vec![0; MEMORY_SIZE],
-            palette,
-            screen: [0; SCREEN_WIDTH * SCREEN_HEIGHT],
+            //palette,
+            //screen: [0; SCREEN_WIDTH * SCREEN_HEIGHT],
         }
     }
 }
@@ -35,15 +33,6 @@ impl Default for Cpu {
 impl Cpu {
     pub fn load_rom(&mut self, rom: &[u8]) {
         self.memory[..rom.len()].copy_from_slice(rom);
-    }
-
-    pub fn render(&mut self, new_frame: &[u8; 65536]) {
-        self.screen
-            .iter_mut()
-            .zip(new_frame.iter())
-            .for_each(|(screen_pixel, &frame_pixel)| {
-                *screen_pixel = self.palette[frame_pixel as usize];
-            });
     }
 
     #[inline(always)]
@@ -69,19 +58,30 @@ impl Cpu {
 
     #[inline(always)]
     pub fn tick(&mut self) {
-        //self.memory[0..2].copy_from_slice(&key_values.to_be_bytes());
 
         self.program_counter = self.read_24_bits(&self.memory[2..5]);
-
-        let graphics_addr = (self.memory[5] as usize) << 16;
-        let new_frame = {
-            let frame_slice = &self.memory[graphics_addr..graphics_addr + 65536];
-            frame_slice.try_into().unwrap()
-        };
-        self.render(&new_frame);
 
         for _ in 0..65536 {
             self.execute_instruction();
         }
     }
+
+    pub fn get_screen_buffer(&self) -> &[u8; SCREEN_WIDTH * SCREEN_HEIGHT] {
+        let graphics_addr = (self.memory[5] as usize) << 16;
+        let new_frame = {
+            let frame_slice = &self.memory[graphics_addr..graphics_addr + 65536];
+            frame_slice.try_into().unwrap()
+        };
+
+        new_frame
+    }
+
+    pub fn get_sample_buffer(&mut self) -> &[u8; 256] {
+        let audio_addr = self.memory[6] as usize * 65536 + self.memory[7] as usize * 256;
+        let sample_buffer = &self.memory[audio_addr..audio_addr + 256];
+
+        sample_buffer.try_into().unwrap()
+    }
+
+
 }
