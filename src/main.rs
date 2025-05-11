@@ -7,7 +7,7 @@ mod cpu;
 mod audio;
 use crate::{
     cpu::{Cpu, SCREEN_HEIGHT, SCREEN_WIDTH},
-    audio::SampleBufferSource,
+    audio::AudioHandler,
 };
 
 fn key_to_hex(key: Key) -> Option<u8> {
@@ -34,6 +34,7 @@ fn key_to_hex(key: Key) -> Option<u8> {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut cpu = Cpu::default();
+    let mut audio_handler = AudioHandler::new();
 
     let filename = env::args().nth(1).ok_or("usage: kpsh FILE_PATH")?;
     let rom_as_vec = fs::read(&filename)?;
@@ -83,9 +84,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
 
         cpu.tick();
-        if cpu.sample_buffer.iter().any(|&sample| sample != 0) {
-            sink.append(SampleBufferSource::from(cpu.sample_buffer));
-        }
+        audio_handler.update_sample_buffer(&cpu.memory);
+        audio_handler.append_to_sink(&sink);
 
         window.update_with_buffer(&cpu.screen, SCREEN_WIDTH, SCREEN_HEIGHT)?;
 

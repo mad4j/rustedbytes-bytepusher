@@ -8,7 +8,6 @@ pub struct Cpu {
     palette: [u32; 256],
     pub memory: Vec<u8>,
     pub screen: [u32; SCREEN_WIDTH * SCREEN_HEIGHT],
-    pub sample_buffer: [u8; 256],
     pub keys: [bool; 16],
 }
 
@@ -30,7 +29,6 @@ impl Default for Cpu {
             memory: vec![0; MEMORY_SIZE],
             palette,
             screen: [0; SCREEN_WIDTH * SCREEN_HEIGHT],
-            sample_buffer: [0; 256],
             keys: [false; 16],
         }
     }
@@ -82,9 +80,6 @@ impl Cpu {
             frame_slice.try_into().unwrap()
         };
         self.render(&new_frame);
-
-        let audio_addr = self.memory[6] as usize * 65536 + self.memory[7] as usize * 256;
-        self.sample_buffer.copy_from_slice(&self.memory[audio_addr..audio_addr + 256]);
 
         for _ in 0..65536 {
             self.execute_instruction();
