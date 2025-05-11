@@ -39,7 +39,7 @@ impl Iterator for SampleBufferSource {
         if self.index >= 256 {
             return None;
         }
-        let mut sample: i8 = 0;
+        let sample: i8;
         unsafe {
             sample = transmute::<u8, i8>(self.inner_sample_buffer[self.index]);
         }

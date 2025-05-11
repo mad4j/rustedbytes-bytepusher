@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use minifb::{Key, KeyRepeat, Scale, Window, WindowOptions};
 use rodio::{OutputStream, Sink};
 use std::{env, fs, io::Write, path::Path};
@@ -9,8 +9,6 @@ use crate::{
     cpu::{Cpu, SCREEN_HEIGHT, SCREEN_WIDTH},
     sound::SampleBufferSource,
 };
-
-const BLANK_BUFFER: [u8; 256] = [0; 256];
 
 fn key_to_hex(key: Key) -> Option<u8> {
     match key {
@@ -35,7 +33,7 @@ fn key_to_hex(key: Key) -> Option<u8> {
 }
 
 fn main() -> Result<(), minifb::Error> {
-    let mut emu = Cpu::default();
+    let mut cpu = Cpu::default();
 
     let filename = env::args().nth(1).expect("usage: kpsh FILE_PATH");
 
@@ -53,24 +51,26 @@ fn main() -> Result<(), minifb::Error> {
         println!("creation of window failed.");
         return Ok(());
     };
-    window.set_target_fps(60);
+    //window.set_target_fps(60);
 
-    emu.load_rom(&rom_as_vec);
+    cpu.load_rom(&rom_as_vec);
 
     let (_stream, stream_handle) =
         OutputStream::try_default().expect("unable to create audio output stream");
     let sink = Sink::try_new(&stream_handle).expect("unable to create audio output sink");
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
+        let start = std::time::Instant::now();
+
         for key in window.get_keys_pressed(KeyRepeat::No) {
             if let Some(hex) = key_to_hex(key) {
-                emu.keys[hex as usize] = true;
+                cpu.keys[hex as usize] = true;
             }
         }
 
         for key in window.get_keys_released() {
             if let Some(hex) = key_to_hex(key) {
-                emu.keys[hex as usize] = false;
+                cpu.keys[hex as usize] = false;
             }
         }
 
@@ -83,16 +83,21 @@ fn main() -> Result<(), minifb::Error> {
                 rom_filename.to_string_lossy(),
                 timestamp
             )) {
-                file.write(emu.memory.as_slice()).unwrap();
+                file.write(cpu.memory.as_slice()).unwrap();
             }
         }
 
-        emu.tick();
-        if emu.sample_buffer != BLANK_BUFFER {
-            sink.append(SampleBufferSource::from(emu.sample_buffer));
+        cpu.tick();
+        if cpu.sample_buffer.iter().any(|&sample| sample != 0) {
+            sink.append(SampleBufferSource::from(cpu.sample_buffer));
         }
 
-        window.update_with_buffer(&emu.screen, SCREEN_WIDTH, SCREEN_HEIGHT)?;
+        window.update_with_buffer(&cpu.screen, SCREEN_WIDTH, SCREEN_HEIGHT)?;
+
+        let elapsed = start.elapsed();
+        if elapsed < std::time::Duration::from_millis(16) {
+            std::thread::sleep(std::time::Duration::from_millis(16) - elapsed);
+        }
     }
     Ok(())
 }

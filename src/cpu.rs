@@ -3,8 +3,6 @@ const MEMORY_SIZE: usize = 16 * 1024 * 1024; // 16MB
 pub const SCREEN_WIDTH: usize = 256;
 pub const SCREEN_HEIGHT: usize = 256;
 
-//use bit_struct::u24;
-
 pub struct Cpu {
     program_counter: usize,
     palette: [u32; 256],
@@ -15,7 +13,6 @@ pub struct Cpu {
 }
 
 impl Default for Cpu {
-
     fn default() -> Self {
         // Generate palette attribute beforehand (so we don't have to parse it every time)
         let mut palette: [u32; 256] = [0; 256];
@@ -40,16 +37,18 @@ impl Default for Cpu {
 }
 
 impl Cpu {
-
     pub fn load_rom(&mut self, rom: &[u8]) {
         self.memory[..rom.len()].copy_from_slice(rom);
     }
 
     pub fn render(&mut self, new_frame: [u8; 65536]) {
         // Copy the new frame into the screen buffer using the palette
-        self.screen.iter_mut().zip(new_frame.iter()).for_each(|(screen_pixel, &frame_pixel)| {
-            *screen_pixel = self.palette[frame_pixel as usize];
-        });
+        self.screen
+            .iter_mut()
+            .zip(new_frame.iter())
+            .for_each(|(screen_pixel, &frame_pixel)| {
+                *screen_pixel = self.palette[frame_pixel as usize];
+            });
     }
 
     #[inline(always)]
@@ -57,27 +56,23 @@ impl Cpu {
         (u32::from_be_bytes([slice[0], slice[1], slice[2], 0]) >> 8) as usize
     }
 
-    /*fn read_opcode(&self) -> (usize, usize, usize) {
-        let pc = self.program_counter;
-        let addr_a = u24::from_be_bytes(self.memory[pc..pc+3].try_into().expect("Unable to read first address in opcode"));
-        let addr_b = u24::from_be_bytes(self.memory[pc+3..pc+6].try_into().expect("Unable to read second address in opcode"));
-        let addr_jump = u24::from_be_bytes(self.memory[pc+6..pc+9].try_into().expect("Unable to read jump address in opcode"));
-        (addr_a.value() as usize, addr_b.value() as usize, addr_jump.value() as usize)
-    }*/
-
     fn execute_instruction(&mut self) {
+        // Read program counter
         let pc = self.program_counter;
 
-        let addr_a = self.read_24_bits(&self.memory[pc..pc + 3]);
-        let addr_b = self.read_24_bits(&self.memory[pc + 3..pc + 6]);
-        //println!("{:?}", opcode);
+        // Read addresses
+        let (addr_a, addr_b, addr_jump) = (
+            self.read_24_bits(&self.memory[pc..pc + 3]),
+            self.read_24_bits(&self.memory[pc + 3..pc + 6]),
+            self.read_24_bits(&self.memory[pc + 6..pc + 9]),
+        );
 
+        // Perform memory copy and update program counter
         self.memory[addr_b] = self.memory[addr_a];
-
-        let addr_jump = self.read_24_bits(&self.memory[pc + 6..pc + 9]);
         self.program_counter = addr_jump;
     }
 
+    #[inline(always)]
     pub fn tick(&mut self) {
         // set key presses
         let mut key_values: u16 = 0;
@@ -89,10 +84,10 @@ impl Cpu {
 
         self.program_counter = self.read_24_bits(&self.memory[2..5]);
 
-        let graphics_addr = (self.memory[5] as usize) * 65536;
+        let graphics_addr = (self.memory[5] as usize) << 16;
         let new_frame: [u8; 65536] = self.memory[graphics_addr..graphics_addr + 65536]
             .try_into()
-            .expect("Unable to load frame from memory");
+            .unwrap();
         self.render(new_frame);
 
         let audio_addr = self.memory[6] as usize * 65536 + self.memory[7] as usize * 256;
