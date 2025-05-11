@@ -12,14 +12,9 @@ impl AudioHandler {
         }
     }
 
-    pub fn update_sample_buffer(&mut self, memory: &[u8]) {
-        let audio_addr = memory[6] as usize * 65536 + memory[7] as usize * 256;
-        self.sample_buffer.copy_from_slice(&memory[audio_addr..audio_addr + 256]);
-    }
-
-    pub fn append_to_sink(&self, sink: &rodio::Sink) {
-        if self.sample_buffer.iter().any(|&sample| sample != 0) {
-            sink.append(SampleBufferSource::from(self.sample_buffer));
+    pub fn append_to_sink(&self, sink: &rodio::Sink, sample_buffer: &[u8; 256]) {
+        if sample_buffer.iter().any(|&sample| sample != 0) {
+            sink.append(SampleBufferSource::from(*sample_buffer));
         }
     }
 }
