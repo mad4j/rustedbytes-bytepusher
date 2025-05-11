@@ -41,8 +41,7 @@ impl Cpu {
         self.memory[..rom.len()].copy_from_slice(rom);
     }
 
-    pub fn render(&mut self, new_frame: [u8; 65536]) {
-        // Copy the new frame into the screen buffer using the palette
+    pub fn render(&mut self, new_frame: &[u8; 65536]) {
         self.screen
             .iter_mut()
             .zip(new_frame.iter())
@@ -57,44 +56,35 @@ impl Cpu {
     }
 
     fn execute_instruction(&mut self) {
-        // Read program counter
         let pc = self.program_counter;
-
-        // Read addresses
         let (addr_a, addr_b, addr_jump) = (
             self.read_24_bits(&self.memory[pc..pc + 3]),
             self.read_24_bits(&self.memory[pc + 3..pc + 6]),
             self.read_24_bits(&self.memory[pc + 6..pc + 9]),
         );
 
-        // Perform memory copy and update program counter
         self.memory[addr_b] = self.memory[addr_a];
         self.program_counter = addr_jump;
     }
 
     #[inline(always)]
     pub fn tick(&mut self) {
-        // set key presses
-        let mut key_values: u16 = 0;
-        for (i, b) in self.keys.iter().enumerate() {
-            let bit = if *b { 1 } else { 0 };
-            key_values |= bit << i;
-        }
+        let key_values: u16 = self.keys.iter().enumerate().fold(0, |acc, (i, &b)| {
+            acc | ((b as u16) << i)
+        });
         self.memory[0..2].copy_from_slice(&key_values.to_be_bytes());
 
         self.program_counter = self.read_24_bits(&self.memory[2..5]);
 
         let graphics_addr = (self.memory[5] as usize) << 16;
-        let new_frame: [u8; 65536] = self.memory[graphics_addr..graphics_addr + 65536]
-            .try_into()
-            .unwrap();
-        self.render(new_frame);
+        let new_frame = {
+            let frame_slice = &self.memory[graphics_addr..graphics_addr + 65536];
+            frame_slice.try_into().unwrap()
+        };
+        self.render(&new_frame);
 
         let audio_addr = self.memory[6] as usize * 65536 + self.memory[7] as usize * 256;
-        self.sample_buffer = self.memory[audio_addr..audio_addr + 256]
-            .try_into()
-            .expect("Unable to load audio sample from memory");
-        //dbg!(self.sample_buffer);
+        self.sample_buffer.copy_from_slice(&self.memory[audio_addr..audio_addr + 256]);
 
         for _ in 0..65536 {
             self.execute_instruction();

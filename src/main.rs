@@ -32,32 +32,28 @@ fn key_to_hex(key: Key) -> Option<u8> {
     }
 }
 
-fn main() -> Result<(), minifb::Error> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut cpu = Cpu::default();
 
-    let filename = env::args().nth(1).expect("usage: kpsh FILE_PATH");
+    let filename = env::args().nth(1).ok_or("usage: kpsh FILE_PATH")?;
+    let rom_as_vec = fs::read(&filename)?;
 
-    let rom_as_vec: Vec<u8> = fs::read(&filename).expect("unable to open rom file");
-
-    let Ok(mut window) = Window::new(
-        format!("kpsh - {}", filename).as_str(),
+    let mut window = Window::new(
+        &format!("kpsh - {}", filename),
         SCREEN_WIDTH,
         SCREEN_HEIGHT,
         WindowOptions {
             scale: Scale::X2,
             ..WindowOptions::default()
         },
-    ) else {
-        println!("creation of window failed.");
-        return Ok(());
-    };
-    //window.set_target_fps(60);
+    )?;
 
     cpu.load_rom(&rom_as_vec);
 
-    let (_stream, stream_handle) =
-        OutputStream::try_default().expect("unable to create audio output stream");
-    let sink = Sink::try_new(&stream_handle).expect("unable to create audio output sink");
+    let (_stream, stream_handle) = OutputStream::try_default()?;
+    let sink = Sink::try_new(&stream_handle)?;
+
+    let frame_duration = std::time::Duration::from_millis(16);
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
         let start = std::time::Instant::now();
@@ -78,13 +74,12 @@ fn main() -> Result<(), minifb::Error> {
             let timestamp = Utc::now().format("%Y-%m-%dT%H:%M:%S%.3f");
             let rom_filename = Path::new(&filename).file_stem().unwrap();
 
-            if let Ok(mut file) = fs::File::create(format!(
+            let mut file = fs::File::create(format!(
                 "kpsh_{}_{}.BytePusher",
                 rom_filename.to_string_lossy(),
                 timestamp
-            )) {
-                file.write(cpu.memory.as_slice()).unwrap();
-            }
+            ))?;
+            file.write_all(cpu.memory.as_slice())?;
         }
 
         cpu.tick();
@@ -95,8 +90,8 @@ fn main() -> Result<(), minifb::Error> {
         window.update_with_buffer(&cpu.screen, SCREEN_WIDTH, SCREEN_HEIGHT)?;
 
         let elapsed = start.elapsed();
-        if elapsed < std::time::Duration::from_millis(16) {
-            std::thread::sleep(std::time::Duration::from_millis(16) - elapsed);
+        if elapsed < frame_duration {
+            std::thread::sleep(frame_duration - elapsed);
         }
     }
     Ok(())
