@@ -1,7 +1,6 @@
-use chrono::Utc;
-use minifb::{Key, KeyRepeat, Scale, Window, WindowOptions};
+use minifb::{Key, Scale, Window, WindowOptions};
 use rodio::{OutputStream, Sink};
-use std::{env, fs, io::Write, path::Path};
+use std::{env, fs};
 
 mod cpu;
 mod audio;
@@ -40,22 +39,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
         let start = std::time::Instant::now();
-
+    
         let key_values = keyboard_handler.get_key_values(&window);
 
-        if window.is_key_pressed(Key::M, KeyRepeat::No) {
-            let timestamp = Utc::now().format("%Y-%m-%dT%H:%M:%S%.3f");
-            let rom_filename = Path::new(&filename).file_stem().unwrap();
-
-            let mut file = fs::File::create(format!(
-                "kpsh_{}_{}.BytePusher",
-                rom_filename.to_string_lossy(),
-                timestamp
-            ))?;
-            file.write_all(cpu.memory.as_slice())?;
-        }
-
         cpu.tick(key_values);
+
         audio_handler.update_sample_buffer(&cpu.memory);
         audio_handler.append_to_sink(&sink);
 
