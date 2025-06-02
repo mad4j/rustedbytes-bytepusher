@@ -7,33 +7,37 @@ use crate::cpu::{Cpu, SCREEN_HEIGHT, SCREEN_WIDTH};
 use crate::keyboard::KeyboardHandler;
 use crate::screen::ScreenHandler;
 
-pub fn run_vm_frame(
-    window: &mut Window,
-    cpu: &mut Cpu,
-    audio_handler: &AudioHandler,
-    sink: &Sink,
-    keyboard_handler: &mut KeyboardHandler,
-    screen_handler: &mut ScreenHandler,
-    frame_duration: Duration,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let start = Instant::now();
+pub struct VirtualMachine {
+    pub window: Window,
+    pub cpu: Cpu,
+    pub audio_handler: AudioHandler,
+    pub sink: Sink,
+    pub keyboard_handler: KeyboardHandler,
+    pub screen_handler: ScreenHandler,
+    pub frame_duration: Duration,
+}
 
-    keyboard_handler.handle_events(window);
-    cpu.update_keyboard_state(keyboard_handler.get_keyboard_state());
+impl VirtualMachine {
+    pub fn tick_frame(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        let start = Instant::now();
 
-    cpu.tick();
+        self.keyboard_handler.handle_events(&self.window);
+        self.cpu.update_keyboard_state(self.keyboard_handler.get_keyboard_state());
 
-    let new_sample_buffer = cpu.get_sample_buffer();
-    audio_handler.append_buffer_to_sink(sink, new_sample_buffer);
+        self.cpu.tick();
 
-    let new_frame = cpu.get_screen_buffer();
-    screen_handler.render(new_frame);
+        let new_sample_buffer = self.cpu.get_sample_buffer();
+        self.audio_handler.append_buffer_to_sink(&self.sink, new_sample_buffer);
 
-    window.update_with_buffer(screen_handler.get_screen(), SCREEN_WIDTH, SCREEN_HEIGHT)?;
+        let new_frame = self.cpu.get_screen_buffer();
+        self.screen_handler.render(new_frame);
 
-    let elapsed = start.elapsed();
-    if elapsed < frame_duration {
-        std::thread::sleep(frame_duration - elapsed);
+        self.window.update_with_buffer(self.screen_handler.get_screen(), SCREEN_WIDTH, SCREEN_HEIGHT)?;
+
+        let elapsed = start.elapsed();
+        if elapsed < self.frame_duration {
+            std::thread::sleep(self.frame_duration - elapsed);
+        }
+        Ok(())
     }
-    Ok(())
 }

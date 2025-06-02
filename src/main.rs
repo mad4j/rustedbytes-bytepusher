@@ -15,7 +15,7 @@ use crate::{
 };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut window = Window::new(
+    let window = Window::new(
         &format!("RustedBytes - BytePusher "),
         SCREEN_WIDTH,
         SCREEN_HEIGHT,
@@ -30,8 +30,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut cpu = Cpu::default();
     let audio_handler = AudioHandler::new();
-    let mut keyboard_handler = KeyboardHandler::new();
-    let mut screen_handler = screen::ScreenHandler::new();
+    let keyboard_handler = KeyboardHandler::new();
+    let screen_handler = screen::ScreenHandler::new();
 
     let filename = env::args().nth(1).ok_or("usage: kpsh FILE_PATH")?;
     let rom_as_vec = fs::read(&filename)?;
@@ -40,16 +40,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let frame_duration = std::time::Duration::from_millis(16);
 
-    while window.is_open() && !window.is_key_down(Key::Escape) {
-        vm::run_vm_frame(
-            &mut window,
-            &mut cpu,
-            &audio_handler,
-            &sink,
-            &mut keyboard_handler,
-            &mut screen_handler,
-            frame_duration,
-        )?;
+    let mut vm = vm::VirtualMachine {
+        window,
+        cpu,
+        audio_handler,
+        sink,
+        keyboard_handler,
+        screen_handler,
+        frame_duration,
+    };
+
+    while vm.window.is_open() && !vm.window.is_key_down(Key::Escape) {
+        vm.tick_frame()?;
     }
     Ok(())
 }
