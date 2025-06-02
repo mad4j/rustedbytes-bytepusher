@@ -1,4 +1,4 @@
-use rodio::{cpal::Sample, source::Source, Sink};
+use rodio::{Sink, cpal::Sample, source::Source};
 use std::time::Duration;
 
 /// Configurazione per l'audio
@@ -100,7 +100,7 @@ impl<const N: usize> Iterator for SampleBufferSource<N> {
         let sample_u8 = self.buffer[self.index];
         let sample_i8 = sample_u8 as i8; // Conversione sicura
         self.index += 1;
-        
+
         Some(sample_i8.to_sample::<i16>())
     }
 }
@@ -121,9 +121,8 @@ mod tests {
         let buffer = [128u8; 256];
         let config = AudioConfig::default();
         let source = SampleBufferSource::new(buffer, config);
-        
+
         let expected_duration = Duration::from_nanos((256 * 1_000_000_000) / 15360);
         assert_eq!(source.total_duration(), Some(expected_duration));
     }
-
 }

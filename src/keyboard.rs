@@ -10,7 +10,6 @@ impl KeyboardHandler {
     }
 
     pub fn handle_events(&mut self, window: &Window) {
-
         for key in window.get_keys_pressed(KeyRepeat::No) {
             if let Some(hex) = Self::key_to_hex(key) {
                 self.keyboard_state |= 1 << hex;

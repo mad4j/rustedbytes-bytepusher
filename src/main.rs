@@ -2,19 +2,19 @@ use minifb::{Key, Scale, Window, WindowOptions};
 use rodio::{OutputStream, Sink};
 use std::{env, fs};
 
-mod cpu;
 mod audio;
+mod cpu;
 mod keyboard;
 mod screen;
+mod vm;
 
 use crate::{
-    cpu::{Cpu, SCREEN_HEIGHT, SCREEN_WIDTH},
     audio::AudioHandler,
+    cpu::{Cpu, SCREEN_HEIGHT, SCREEN_WIDTH},
     keyboard::KeyboardHandler,
 };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    
     let mut window = Window::new(
         &format!("RustedBytes - BytePusher "),
         SCREEN_WIDTH,
@@ -41,26 +41,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let frame_duration = std::time::Duration::from_millis(16);
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
-        let start = std::time::Instant::now();
-    
-        keyboard_handler.handle_events(&window);
-        cpu.update_keyboard_state(keyboard_handler.get_keyboard_state());
-
-        cpu.tick();
-
-        let new_sample_buffer = cpu.get_sample_buffer();
-        audio_handler.append_buffer_to_sink(&sink, new_sample_buffer);
-
-        let new_frame = cpu.get_screen_buffer();
-        screen_handler.render(new_frame);
-
-        window
-            .update_with_buffer(screen_handler.get_screen(), SCREEN_WIDTH, SCREEN_HEIGHT)?;
-
-        let elapsed = start.elapsed();
-        if elapsed < frame_duration {
-            std::thread::sleep(frame_duration - elapsed);
-        }
+        vm::run_vm_frame(
+            &mut window,
+            &mut cpu,
+            &audio_handler,
+            &sink,
+            &mut keyboard_handler,
+            &mut screen_handler,
+            frame_duration,
+        )?;
     }
     Ok(())
 }

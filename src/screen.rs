@@ -1,5 +1,3 @@
-
-
 pub struct ScreenHandler {
     pub screen: [u32; 65536],
     pub palette: [u32; 256],

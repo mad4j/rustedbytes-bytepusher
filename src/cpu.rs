@@ -56,7 +56,6 @@ impl Cpu {
 
     #[inline(always)]
     pub fn tick(&mut self) {
-
         self.program_counter = self.read_24_bits(&self.memory[2..5]);
 
         for _ in 0..65536 {
@@ -80,6 +79,4 @@ impl Cpu {
 
         sample_buffer.try_into().unwrap()
     }
-
-
 }
