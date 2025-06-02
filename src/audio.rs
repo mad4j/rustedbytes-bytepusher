@@ -1,15 +1,11 @@
 use rodio::{cpal::Sample, source::Source};
 use std::{mem::transmute, time::Duration};
 
-pub struct AudioHandler {
-    pub sample_buffer: [u8; 256],
-}
+pub struct AudioHandler { }
 
 impl AudioHandler {
     pub fn new() -> Self {
-        Self {
-            sample_buffer: [0; 256],
-        }
+        Self { }
     }
 
     pub fn append_to_sink(&self, sink: &rodio::Sink, sample_buffer: &[u8; 256]) {
@@ -35,7 +31,12 @@ impl From<[u8; 256]> for SampleBufferSource {
 
 impl Source for SampleBufferSource {
     fn current_frame_len(&self) -> Option<usize> {
-        Some(self.inner_sample_buffer.len() - self.index - 1)
+        let remaining = self.inner_sample_buffer.len() - self.index;
+        if remaining == 0 {
+            None
+        } else {
+            Some(remaining)
+        }
     }
 
     fn channels(&self) -> u16 {
@@ -52,7 +53,7 @@ impl Source for SampleBufferSource {
 }
 
 impl Iterator for SampleBufferSource {
-    type Item = u16;
+    type Item = i16;
     fn next(&mut self) -> Option<Self::Item> {
         if self.index >= 256 {
             return None;
@@ -62,6 +63,7 @@ impl Iterator for SampleBufferSource {
             sample = transmute::<u8, i8>(self.inner_sample_buffer[self.index]);
         }
         self.index += 1;
-        Some(sample.to_sample::<Self::Item>())
+        let sample = sample.to_sample::<Self::Item>();
+        Some(sample)
     }
 }
