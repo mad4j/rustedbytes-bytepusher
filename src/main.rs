@@ -49,7 +49,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         cpu.tick();
 
         let new_sample_buffer = cpu.get_sample_buffer();
-        audio_handler.append_to_sink(&sink, new_sample_buffer);
+        audio_handler.append_buffer_to_sink(&sink, new_sample_buffer);
 
         let new_frame = cpu.get_screen_buffer();
         screen_handler.render(new_frame);
