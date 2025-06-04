@@ -37,6 +37,8 @@ impl VirtualMachine {
         let elapsed = start.elapsed();
         if elapsed < self.frame_duration {
             std::thread::sleep(self.frame_duration - elapsed);
+        } else {
+            eprintln!("Frame took too long: {:?}", elapsed);
         }
         Ok(())
     }

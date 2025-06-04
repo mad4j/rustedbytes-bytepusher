@@ -10,17 +10,7 @@ pub struct Cpu {
 
 impl Default for Cpu {
     fn default() -> Self {
-        // Generate palette attribute beforehand (so we don't have to parse it every time)
-        let mut palette: [u32; 256] = [0; 256];
-        for (idx, val) in palette.iter_mut().enumerate() {
-            if idx >= 216 {
-                break;
-            }
-            *val = ((idx as u32 / 36 * 0x33) << 16)
-                | ((idx as u32 / 6 % 6 * 0x33) << 8)
-                | (idx as u32 % 6 * 0x33);
-        }
-
+        // Initialize the CPU with a program counter and memory
         Self {
             program_counter: 0x200,
             memory: vec![0; MEMORY_SIZE],
@@ -39,6 +29,9 @@ impl Cpu {
     }
 
     fn execute_instruction(&mut self) {
+
+        //TODO non viene mai aggiornato il registr del program counter
+
         let pc = self.program_counter;
         let (addr_a, addr_b, addr_jump) = (
             self.read_24_bits(&self.memory[pc..pc + 3]),
