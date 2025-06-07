@@ -1,6 +1,7 @@
+use clap::Parser;
 use minifb::{Key, Scale, Window, WindowOptions};
 use rodio::{OutputStream, Sink};
-use std::{env, fs};
+use std::fs;
 
 mod audio;
 mod cpu;
@@ -14,7 +15,16 @@ use crate::{
     keyboard::KeyboardHandler,
 };
 
+/// BytePusher VM
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    /// Percorso del file ROM BytePusher
+    rom: String,
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let args = Args::parse();
     let window = Window::new(
         &format!("RustedBytes - BytePusher "),
         SCREEN_WIDTH,
@@ -33,9 +43,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let keyboard_handler = KeyboardHandler::new();
     let screen_handler = screen::ScreenHandler::new();
 
-    let filename = env::args().nth(1).ok_or("usage: kpsh FILE_PATH")?;
-    let rom_as_vec = fs::read(&filename)?;
-
+    let rom_as_vec = fs::read(&args.rom)?;
     cpu.load_rom(&rom_as_vec);
 
     let frame_duration = std::time::Duration::from_millis(16);

@@ -10,6 +10,7 @@ keywords = ["vm", "emulator", "bytepusher"]
 categories = ["emulators"]
 
 [dependencies]
+clap = { version = "4.5.39", features = ["derive"] }
 minifb = "0.28.0"
 rodio = { version = "0.20.1", default-features = false }
 
