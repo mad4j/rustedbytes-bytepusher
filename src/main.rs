@@ -6,6 +6,7 @@ use std::fs;
 mod audio;
 mod cpu;
 mod keyboard;
+mod memory;
 mod screen;
 mod vm;
 
@@ -44,7 +45,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let screen_handler = screen::ScreenHandler::new();
 
     let rom_as_vec = fs::read(&args.rom)?;
-    cpu.load_rom(&rom_as_vec);
+    cpu.memory.load_rom(&rom_as_vec);
 
     let frame_duration = std::time::Duration::from_millis(16);
 

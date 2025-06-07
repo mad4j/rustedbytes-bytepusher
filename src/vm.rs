@@ -24,7 +24,7 @@ impl VirtualMachine {
         self.keyboard_handler.handle_events(&self.window);
         self.cpu.update_keyboard_state(self.keyboard_handler.get_keyboard_state());
 
-        self.cpu.tick();
+        self.cpu.frame_tick();
 
         let new_sample_buffer = self.cpu.get_sample_buffer();
         self.audio_handler.append_buffer_to_sink(&self.sink, new_sample_buffer);
