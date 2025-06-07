@@ -1,8 +1,8 @@
 #![allow(dead_code)]
-use std::ops::{Index, IndexMut};
+use std::ops::{Index, IndexMut, Range};
 
 pub struct Memory {
-    pub data: Vec<u8>,
+    data: Vec<u8>,
 }
 
 impl Memory {
@@ -55,6 +55,19 @@ impl Index<usize> for Memory {
 
 impl IndexMut<usize> for Memory {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        &mut self.data[index]
+    }
+}
+
+impl Index<Range<usize>> for Memory {
+    type Output = [u8];
+    fn index(&self, index: Range<usize>) -> &Self::Output {
+        &self.data[index]
+    }
+}
+
+impl IndexMut<Range<usize>> for Memory {
+    fn index_mut(&mut self, index: Range<usize>) -> &mut Self::Output {
         &mut self.data[index]
     }
 }

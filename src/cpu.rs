@@ -5,6 +5,14 @@ const MEMORY_SIZE: usize = 16 * 1024 * 1024; // 16MiB
 pub const SCREEN_WIDTH: usize = 256;
 pub const SCREEN_HEIGHT: usize = 256;
 
+pub const AUDIO_BUFFER_SIZE: usize = 256;
+pub const SCREEN_BUFFER_SIZE: usize = SCREEN_WIDTH * SCREEN_HEIGHT;
+
+pub const KEYBOARD_REGISTER_ADDR: usize = 0x000000;
+pub const PROGRAM_COUNTER_ADDR: usize = 0x000002;
+pub const SCREEN_REGISTER_ADDR: usize = 0x000005;
+pub const AUDIO_REGISTER_ADDR: usize = 0x000006;
+
 pub struct Cpu {
     program_counter: usize,
     pub memory: Memory,
@@ -36,33 +44,33 @@ impl Cpu {
         self.program_counter = addr_jump;
     }
 
-    pub fn update_keyboard_state(&mut self, key_values: u16) {
-        self.memory.write_16_bits(0, key_values);
-    }
 
     #[inline(always)]
     pub fn frame_tick(&mut self) {
-        // program counter update from memory at the beginnging of the frame
-        self.program_counter = self.memory.read_24_bits(2);
+        // program counter update from memory at the beginnging of each frame
+        self.program_counter = self.memory.read_24_bits(PROGRAM_COUNTER_ADDR);
 
         for _ in 0..65536 {
             self.execute_instruction();
         }
     }
 
-    pub fn get_screen_buffer(&self) -> &[u8; SCREEN_WIDTH * SCREEN_HEIGHT] {
-        let graphics_addr = (self.memory[5] as usize) << 16;
-        let new_frame = {
-            let frame_slice = &self.memory.data[graphics_addr..graphics_addr + 65536];
-            frame_slice.try_into().unwrap()
-        };
 
-        new_frame
+    pub fn update_keyboard_state(&mut self, key_values: u16) {
+        self.memory.write_16_bits(KEYBOARD_REGISTER_ADDR, key_values);
     }
 
-    pub fn get_sample_buffer(&mut self) -> &[u8; 256] {
-        let audio_addr = self.memory[6] as usize * 65536 + self.memory[7] as usize * 256;
-        let sample_buffer = &self.memory.data[audio_addr..audio_addr + 256];
+
+    pub fn get_screen_buffer(&self) -> &[u8; SCREEN_BUFFER_SIZE] {
+        let graphics_addr = (self.memory[SCREEN_REGISTER_ADDR] as usize) << 16;
+        let new_frame =  &self.memory[graphics_addr..graphics_addr + SCREEN_BUFFER_SIZE];
+
+        new_frame.try_into().unwrap()
+    }
+
+    pub fn get_sample_buffer(&mut self) -> &[u8; AUDIO_BUFFER_SIZE] {
+        let audio_addr = (self.memory.read_16_bits(AUDIO_REGISTER_ADDR) as usize) << 8;
+        let sample_buffer = &self.memory[audio_addr..audio_addr + AUDIO_BUFFER_SIZE];
 
         sample_buffer.try_into().unwrap()
     }
