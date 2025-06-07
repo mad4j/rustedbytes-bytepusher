@@ -4,15 +4,13 @@ pub const SCREEN_WIDTH: usize = 256;
 pub const SCREEN_HEIGHT: usize = 256;
 
 pub struct Cpu {
-    program_counter: usize,
     pub memory: Vec<u8>,
 }
 
 impl Default for Cpu {
     fn default() -> Self {
-        // Initialize the CPU with a program counter and memory
+        // Initialize the CPU with memory only
         Self {
-            program_counter: 0x200,
             memory: vec![0; MEMORY_SIZE],
         }
     }
@@ -29,10 +27,8 @@ impl Cpu {
     }
 
     fn execute_instruction(&mut self) {
-
-        //TODO non viene mai aggiornato il registr del program counter
-
-        let pc = self.program_counter;
+        // Usa il program counter dalla memoria (indirizzi 2,3,4)
+        let pc = self.read_24_bits(&self.memory[2..5]);
         let (addr_a, addr_b, addr_jump) = (
             self.read_24_bits(&self.memory[pc..pc + 3]),
             self.read_24_bits(&self.memory[pc + 3..pc + 6]),
@@ -40,7 +36,11 @@ impl Cpu {
         );
 
         self.memory[addr_b] = self.memory[addr_a];
-        self.program_counter = addr_jump;
+        // Aggiorna il program counter in memoria
+        let jump_bytes = (addr_jump as u32).to_be_bytes();
+        self.memory[2] = jump_bytes[1];
+        self.memory[3] = jump_bytes[2];
+        self.memory[4] = jump_bytes[3];
     }
 
     pub fn update_keyboard_state(&mut self, key_values: u16) {
@@ -49,8 +49,7 @@ impl Cpu {
 
     #[inline(always)]
     pub fn tick(&mut self) {
-        self.program_counter = self.read_24_bits(&self.memory[2..5]);
-
+        // Nessun program_counter nel campo struct, già letto da memoria
         for _ in 0..65536 {
             self.execute_instruction();
         }
