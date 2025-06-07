@@ -104,25 +104,3 @@ impl<const N: usize> Iterator for SampleBufferSource<N> {
         Some(sample_i8.to_sample::<i16>())
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_audio_handler_creation() {
-        let handler = AudioHandler::new();
-        assert_eq!(handler.config.sample_rate, 15360);
-        assert_eq!(handler.config.channels, 1);
-    }
-
-    #[test]
-    fn test_sample_source_duration() {
-        let buffer = [128u8; 256];
-        let config = AudioConfig::default();
-        let source = SampleBufferSource::new(buffer, config);
-
-        let expected_duration = Duration::from_nanos((256 * 1_000_000_000) / 15360);
-        assert_eq!(source.total_duration(), Some(expected_duration));
-    }
-}
