@@ -6,11 +6,10 @@ pub const MEMORY_SIZE: usize = 16 * 1024 * 1024; // 16 MiB of memory
 
 pub const SCREEN_WIDTH: usize = 256;
 pub const SCREEN_HEIGHT: usize = 256;
+pub const SCREEN_BUFFER_SIZE: usize = SCREEN_WIDTH * SCREEN_HEIGHT;
 
 pub const AUDIO_BUFFER_SIZE: usize = 256;
 pub const AUDIO_SAMPLES_PER_SECOND: u32 = 15360; // 256 * 60
-
-pub const SCREEN_BUFFER_SIZE: usize = SCREEN_WIDTH * SCREEN_HEIGHT;
 
 pub const KEYBOARD_REGISTER_ADDR: usize = 0x000000;
 pub const PROGRAM_COUNTER_ADDR: usize = 0x000002;
@@ -54,7 +53,7 @@ impl Cpu {
     }
 
     #[inline(always)]
-    pub fn frame_tick(&mut self) {
+    pub fn tick(&mut self) {
         // needed to reduce borrow checker issues
         let pc = {
             let memory = &*self.memory.borrow();

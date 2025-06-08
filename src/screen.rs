@@ -28,7 +28,7 @@ impl ScreenHandler {
     pub fn render_frame(&mut self)  -> Result<(), Box<dyn std::error::Error>> {
         let new_frame = self.get_screen_buffer();
 
-        let mut screen = [0u32; 65536];
+        let mut screen = [0u32; cpu::SCREEN_BUFFER_SIZE];
 
         screen
             .iter_mut()

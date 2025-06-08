@@ -46,7 +46,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     vm.load_rom(&args.rom)?;
 
     while window.borrow().is_open() && !window.borrow().is_key_down(Key::Escape) {
-        vm.tick_frame()?;
+        vm.process_frame()?;
     }
     Ok(())
 }

@@ -60,12 +60,12 @@ impl VirtualMachine {
         Ok(())
     }
 
-    pub fn tick_frame(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn process_frame(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         let start = Instant::now();
 
         self.keyboard_handler.handle_events();
 
-        self.cpu.frame_tick();
+        self.cpu.tick();
 
         self.audio_handler.append_samples();
 
