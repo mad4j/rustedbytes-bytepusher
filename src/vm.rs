@@ -10,6 +10,22 @@ use crate::keyboard::KeyboardHandler;
 use crate::memory::Memory;
 use crate::screen::ScreenHandler;
 
+
+pub const MEMORY_SIZE: usize = 16 * 1024 * 1024; // 16 MiB of memory
+
+pub const SCREEN_WIDTH: usize = 256;
+pub const SCREEN_HEIGHT: usize = 256;
+pub const SCREEN_BUFFER_SIZE: usize = SCREEN_WIDTH * SCREEN_HEIGHT;
+
+pub const AUDIO_BUFFER_SIZE: usize = 256;
+pub const AUDIO_SAMPLES_PER_SECOND: u32 = 15360; // 256 * 60
+
+pub const KEYBOARD_REGISTER_ADDR: usize = 0x000000;
+pub const PROGRAM_COUNTER_ADDR: usize = 0x000002;
+pub const SCREEN_REGISTER_ADDR: usize = 0x000005;
+pub const AUDIO_REGISTER_ADDR: usize = 0x000006;
+
+
 pub struct VirtualMachine {
     pub _window: Rc<RefCell<Window>>,
     pub _sink: Rc<RefCell<Sink>>,
@@ -27,17 +43,17 @@ impl VirtualMachine {
         sink: Rc<RefCell<Sink>>,
         frame_duration: Duration,
     ) -> Self {
-        let memory = Rc::new(RefCell::new(Memory::new(crate::cpu::MEMORY_SIZE)));
+        let memory = Rc::new(RefCell::new(Memory::new(MEMORY_SIZE)));
         let cpu = Cpu::new(Rc::clone(&memory));
         let audio_handler =
-            AudioHandler::new(crate::cpu::AUDIO_REGISTER_ADDR, Rc::clone(&memory), Rc::clone(&sink));
+            AudioHandler::new(AUDIO_REGISTER_ADDR, Rc::clone(&memory), Rc::clone(&sink));
         let keyboard_handler = KeyboardHandler::new(
-            crate::cpu::KEYBOARD_REGISTER_ADDR,
+            KEYBOARD_REGISTER_ADDR,
             Rc::clone(&window),
             Rc::clone(&memory),
         );
         let screen_handler = ScreenHandler::new(
-            crate::cpu::SCREEN_REGISTER_ADDR,
+            SCREEN_REGISTER_ADDR,
             Rc::clone(&memory),
             Rc::clone(&window),
         );

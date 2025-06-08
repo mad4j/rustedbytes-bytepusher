@@ -1,5 +1,6 @@
-use crate::cpu::{AUDIO_BUFFER_SIZE, AUDIO_SAMPLES_PER_SECOND};
+
 use crate::memory::Memory;
+use crate::vm::{AUDIO_BUFFER_SIZE, AUDIO_SAMPLES_PER_SECOND};
 
 use rodio::{Sink, cpal::Sample, source::Source};
 use std::cell::RefCell;

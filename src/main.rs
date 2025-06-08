@@ -12,8 +12,8 @@ mod memory;
 mod screen;
 mod vm;
 
-use crate::cpu::SCREEN_HEIGHT;
-use crate::cpu::SCREEN_WIDTH;
+use crate::vm::SCREEN_HEIGHT;
+use crate::vm::SCREEN_WIDTH;
 
 /// BytePusher VM
 #[derive(Parser, Debug)]

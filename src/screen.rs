@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::{cpu, memory::Memory};
+use crate::{memory::Memory, vm::{SCREEN_BUFFER_SIZE, SCREEN_HEIGHT, SCREEN_WIDTH}};
 
 pub struct ScreenHandler {
     pub palette: [u32; 256],
@@ -28,7 +28,7 @@ impl ScreenHandler {
     pub fn render_frame(&mut self)  -> Result<(), Box<dyn std::error::Error>> {
         let new_frame = self.get_screen_buffer();
 
-        let mut screen = [0u32; cpu::SCREEN_BUFFER_SIZE];
+        let mut screen = [0u32; SCREEN_BUFFER_SIZE];
 
         screen
             .iter_mut()
@@ -39,8 +39,8 @@ impl ScreenHandler {
 
         self.window.borrow_mut().update_with_buffer(
             &screen,
-            cpu::SCREEN_WIDTH,
-            cpu::SCREEN_HEIGHT,
+            SCREEN_WIDTH,
+            SCREEN_HEIGHT,
         )?;
 
         Ok(())
@@ -60,11 +60,11 @@ impl ScreenHandler {
         palette
     }
 
-    fn get_screen_buffer(&self) -> [u8; cpu::SCREEN_BUFFER_SIZE] {
+    fn get_screen_buffer(&self) -> [u8; SCREEN_BUFFER_SIZE] {
         let mem = self.memory.borrow();
         let graphics_addr = (mem[self.memory_register_addr] as usize) << 16;
-        let new_frame = &mem[graphics_addr..graphics_addr + cpu::SCREEN_BUFFER_SIZE];
-        let mut arr = [0u8; cpu::SCREEN_BUFFER_SIZE];
+        let new_frame = &mem[graphics_addr..graphics_addr + SCREEN_BUFFER_SIZE];
+        let mut arr = [0u8; SCREEN_BUFFER_SIZE];
         arr.copy_from_slice(new_frame);
         arr
     }
