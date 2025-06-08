@@ -8,6 +8,8 @@ pub const SCREEN_WIDTH: usize = 256;
 pub const SCREEN_HEIGHT: usize = 256;
 
 pub const AUDIO_BUFFER_SIZE: usize = 256;
+pub const AUDIO_SAMPLES_PER_SECOND: u32 = 15360; // 256 * 60
+
 pub const SCREEN_BUFFER_SIZE: usize = SCREEN_WIDTH * SCREEN_HEIGHT;
 
 pub const KEYBOARD_REGISTER_ADDR: usize = 0x000000;
@@ -71,15 +73,6 @@ impl Cpu {
         let new_frame = &mem[graphics_addr..graphics_addr + SCREEN_BUFFER_SIZE];
         let mut arr = [0u8; SCREEN_BUFFER_SIZE];
         arr.copy_from_slice(new_frame);
-        arr
-    }
-
-    pub fn get_sample_buffer(&self) -> [u8; AUDIO_BUFFER_SIZE] {
-        let mem = self.memory.borrow();
-        let audio_addr = (mem.read_16_bits(AUDIO_REGISTER_ADDR) as usize) << 8;
-        let sample_buffer = &mem[audio_addr..audio_addr + AUDIO_BUFFER_SIZE];
-        let mut arr = [0u8; AUDIO_BUFFER_SIZE];
-        arr.copy_from_slice(sample_buffer);
         arr
     }
 }

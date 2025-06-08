@@ -27,7 +27,7 @@ struct Args {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
-    let window = Window::new(
+    let window = Rc::new(RefCell::new(Window::new(
         &format!("RustedBytes - BytePusher "),
         SCREEN_WIDTH,
         SCREEN_HEIGHT,
@@ -35,10 +35,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             scale: Scale::X2,
             ..WindowOptions::default()
         },
-    )?;
+    )?));
 
     let (_stream, stream_handle) = OutputStream::try_default()?;
-    let sink = Sink::try_new(&stream_handle)?;
+    let sink = Rc::new(RefCell::new(Sink::try_new(&stream_handle)?));
 
     use std::cell::RefCell;
     use std::rc::Rc;
@@ -46,11 +46,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let memory = Rc::new(RefCell::new(Memory::new(cpu::MEMORY_SIZE)));
 
     let cpu = Cpu::new(Rc::clone(&memory));
-    let audio_handler = AudioHandler::new();
-    let mut keyboard_handler = KeyboardHandler::new();
+    let audio_handler = AudioHandler::new(Rc::clone(&memory), cpu::AUDIO_REGISTER_ADDR, Rc::clone(&sink));
+    let keyboard_handler = KeyboardHandler::new(
+        cpu::KEYBOARD_REGISTER_ADDR,
+        Rc::clone(&window),
+        Rc::clone(&memory),
+    );
     let screen_handler = screen::ScreenHandler::new();
-
-    keyboard_handler.attach_memory(Rc::clone(&memory), cpu::KEYBOARD_REGISTER_ADDR);
 
     let rom_as_vec = fs::read(&args.rom)?;
     memory.borrow_mut().load_rom(&rom_as_vec);
@@ -58,7 +60,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let frame_duration = std::time::Duration::from_millis(16);
 
     let mut vm = vm::VirtualMachine {
-        window,
+        window: Rc::clone(&window),
         cpu,
         audio_handler,
         sink,
@@ -67,7 +69,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         frame_duration,
     };
 
-    while vm.window.is_open() && !vm.window.is_key_down(Key::Escape) {
+    while window.borrow().is_open() && !window.borrow().is_key_down(Key::Escape) {
         vm.tick_frame()?;
     }
     Ok(())

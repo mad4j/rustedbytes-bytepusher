@@ -6,42 +6,41 @@ use crate::memory::Memory;
 
 pub struct KeyboardHandler {
     keyboard_state: u16,
-    memory: Option<Rc<RefCell<Memory>>>,
-    memory_regiter_addr: usize,
+    memory_register_addr: usize,
+    memory: Rc<RefCell<Memory>>,
+    window: Rc<RefCell<Window>>,
 }
 
 impl KeyboardHandler {
-    pub fn new() -> Self {
+    pub fn new(
+        memory_register_addr: usize,
+        window: Rc<RefCell<Window>>,
+        memory: Rc<RefCell<Memory>>,
+    ) -> Self {
         Self {
             keyboard_state: 0,
-            memory: None,
-            memory_regiter_addr: 0,
+            memory,
+            memory_register_addr,
+            window,
         }
     }
 
-    pub fn attach_memory(&mut self, memory: Rc<RefCell<Memory>>, memory_register_addr: usize) {
-        self.memory = Some(memory);
-        self.memory_regiter_addr = memory_register_addr;
-    }
-
-    pub fn handle_events(&mut self, window: &Window) {
+    pub fn handle_events(&mut self) {
+        let window = self.window.borrow();
         for key in window.get_keys_pressed(KeyRepeat::No) {
             if let Some(hex) = Self::key_to_hex(key) {
                 self.keyboard_state |= 1 << hex;
             }
         }
-
         for key in window.get_keys_released() {
             if let Some(hex) = Self::key_to_hex(key) {
                 self.keyboard_state &= !(1 << hex);
             }
         }
 
-        if let Some(ref memory) = self.memory {
-            memory
-                .borrow_mut()
-                .write_16_bits(self.memory_regiter_addr, self.keyboard_state);
-        }
+        self.memory
+            .borrow_mut()
+            .write_16_bits(self.memory_register_addr, self.keyboard_state);
     }
 
     pub fn key_to_hex(key: Key) -> Option<u8> {

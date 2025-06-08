@@ -1,4 +1,9 @@
+use crate::cpu::{AUDIO_BUFFER_SIZE, AUDIO_SAMPLES_PER_SECOND};
+use crate::memory::Memory;
+
 use rodio::{Sink, cpal::Sample, source::Source};
+use std::cell::RefCell;
+use std::rc::Rc;
 use std::time::Duration;
 
 /// Configurazione per l'audio
@@ -11,7 +16,7 @@ pub struct AudioConfig {
 impl Default for AudioConfig {
     fn default() -> Self {
         Self {
-            sample_rate: 15360, // 256 * 60
+            sample_rate: AUDIO_SAMPLES_PER_SECOND, // 256 * 60
             channels: 1,
         }
     }
@@ -19,30 +24,40 @@ impl Default for AudioConfig {
 
 pub struct AudioHandler {
     config: AudioConfig,
+    memory: Rc<RefCell<Memory>>,
+    memory_register_addr: usize,
+    sink: Rc<RefCell<Sink>>,
 }
 
 impl AudioHandler {
-    pub fn new() -> Self {
-        Self::with_config(AudioConfig::default())
-    }
-
-    pub fn with_config(config: AudioConfig) -> Self {
-        Self { config }
-    }
-
-    /// Aggiunge un buffer audio al sink se contiene dati non-zero
-    pub fn append_buffer_to_sink<const N: usize>(&self, sink: &Sink, buffer: &[u8; N]) {
-        if buffer.iter().any(|&sample| sample != 0) {
-            let source = SampleBufferSource::new(*buffer, self.config.clone());
-            sink.append(source);
+    pub fn new(memory: Rc<RefCell<Memory>>, memory_register_addr: usize, sink: Rc<RefCell<Sink>>) -> Self {
+        Self {
+            config: AudioConfig::default(),
+            memory,
+            memory_register_addr,
+            sink,
         }
     }
-}
 
-impl Default for AudioHandler {
-    fn default() -> Self {
-        Self::new()
+    /// Recupera il buffer dalla memoria e lo aggiunge al sink se contiene dati non-zero
+    pub fn append_buffer_to_sink(&self) {
+        let buffer = self.get_sample_buffer();
+        if buffer.iter().any(|&sample| sample != 0) {
+            let source = SampleBufferSource::new(buffer, self.config.clone());
+            self.sink.borrow_mut().append(source);
+        }
     }
+
+    
+    pub fn get_sample_buffer(&self) -> [u8; AUDIO_BUFFER_SIZE] {
+        let mem = self.memory.borrow();
+        let audio_addr = (mem.read_16_bits(self.memory_register_addr) as usize) << 8;
+        let sample_buffer = &mem[audio_addr..audio_addr + AUDIO_BUFFER_SIZE];
+        let mut arr = [0u8; AUDIO_BUFFER_SIZE];
+        arr.copy_from_slice(sample_buffer);
+        arr
+    }
+
 }
 
 /// Sorgente audio per buffer a dimensione fissa
