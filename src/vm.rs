@@ -5,14 +5,14 @@ use std::rc::Rc;
 use std::time::{Duration, Instant};
 
 use crate::audio::AudioHandler;
-use crate::cpu::{Cpu, SCREEN_HEIGHT, SCREEN_WIDTH};
+use crate::cpu::Cpu;
 use crate::keyboard::KeyboardHandler;
 use crate::memory::Memory;
 use crate::screen::ScreenHandler;
 
 pub struct VirtualMachine {
-    pub window: Rc<RefCell<Window>>,
-    pub sink: Rc<RefCell<Sink>>,
+    pub _window: Rc<RefCell<Window>>,
+    pub _sink: Rc<RefCell<Sink>>,
     pub cpu: Cpu,
     pub memory: Rc<RefCell<Memory>>,
     pub audio_handler: AudioHandler,
@@ -36,10 +36,14 @@ impl VirtualMachine {
             Rc::clone(&window),
             Rc::clone(&memory),
         );
-        let screen_handler = ScreenHandler::new();
+        let screen_handler = ScreenHandler::new(
+            crate::cpu::SCREEN_REGISTER_ADDR,
+            Rc::clone(&memory),
+            Rc::clone(&window),
+        );
         Self {
-            window,
-            sink,
+            _window: window,
+            _sink: sink,
             cpu,
             memory,
             audio_handler,
@@ -65,16 +69,11 @@ impl VirtualMachine {
 
         self.audio_handler.append_samples();
 
-        let new_frame = self.cpu.get_screen_buffer();
-        self.screen_handler.render(&new_frame);
-
-        self.window.borrow_mut().update_with_buffer(
-            self.screen_handler.get_screen(),
-            SCREEN_WIDTH,
-            SCREEN_HEIGHT,
-        )?;
+        self.screen_handler.render_frame()?;
 
         let elapsed = start.elapsed();
+
+        //TODO: usare invece il limitatore di minifb
         if elapsed < self.frame_duration {
             std::thread::sleep(self.frame_duration - elapsed);
         } else {

@@ -66,13 +66,4 @@ impl Cpu {
             self.execute_instruction();
         }
     }
-
-    pub fn get_screen_buffer(&self) -> [u8; SCREEN_BUFFER_SIZE] {
-        let mem = self.memory.borrow();
-        let graphics_addr = (mem[SCREEN_REGISTER_ADDR] as usize) << 16;
-        let new_frame = &mem[graphics_addr..graphics_addr + SCREEN_BUFFER_SIZE];
-        let mut arr = [0u8; SCREEN_BUFFER_SIZE];
-        arr.copy_from_slice(new_frame);
-        arr
-    }
 }
