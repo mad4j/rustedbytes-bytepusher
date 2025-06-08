@@ -10,7 +10,6 @@ use crate::keyboard::KeyboardHandler;
 use crate::memory::Memory;
 use crate::screen::ScreenHandler;
 
-
 pub const MEMORY_SIZE: usize = 16 * 1024 * 1024; // 16 MiB of memory
 
 pub const SCREEN_WIDTH: usize = 256;
@@ -24,7 +23,6 @@ pub const KEYBOARD_REGISTER_ADDR: usize = 0x000000;
 pub const PROGRAM_COUNTER_ADDR: usize = 0x000002;
 pub const SCREEN_REGISTER_ADDR: usize = 0x000005;
 pub const AUDIO_REGISTER_ADDR: usize = 0x000006;
-
 
 pub struct VirtualMachine {
     pub _window: Rc<RefCell<Window>>,
@@ -52,11 +50,8 @@ impl VirtualMachine {
             Rc::clone(&window),
             Rc::clone(&memory),
         );
-        let screen_handler = ScreenHandler::new(
-            SCREEN_REGISTER_ADDR,
-            Rc::clone(&memory),
-            Rc::clone(&window),
-        );
+        let screen_handler =
+            ScreenHandler::new(SCREEN_REGISTER_ADDR, Rc::clone(&memory), Rc::clone(&window));
         Self {
             _window: window,
             _sink: sink,
@@ -68,7 +63,6 @@ impl VirtualMachine {
             frame_duration,
         }
     }
-
 
     pub fn load_rom(&mut self, file_path: &str) -> Result<(), Box<dyn std::error::Error>> {
         let rom_data = std::fs::read(file_path)?;

@@ -1,6 +1,9 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::{memory::Memory, vm::{SCREEN_BUFFER_SIZE, SCREEN_HEIGHT, SCREEN_WIDTH}};
+use crate::{
+    memory::Memory,
+    vm::{SCREEN_BUFFER_SIZE, SCREEN_HEIGHT, SCREEN_WIDTH},
+};
 
 pub struct ScreenHandler {
     pub palette: [u32; 256],
@@ -25,7 +28,7 @@ impl ScreenHandler {
         }
     }
 
-    pub fn render_frame(&mut self)  -> Result<(), Box<dyn std::error::Error>> {
+    pub fn render_frame(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         let new_frame = self.get_screen_buffer();
 
         let mut screen = [0u32; SCREEN_BUFFER_SIZE];
@@ -37,15 +40,12 @@ impl ScreenHandler {
                 *screen_pixel = self.palette[frame_pixel as usize];
             });
 
-        self.window.borrow_mut().update_with_buffer(
-            &screen,
-            SCREEN_WIDTH,
-            SCREEN_HEIGHT,
-        )?;
+        self.window
+            .borrow_mut()
+            .update_with_buffer(&screen, SCREEN_WIDTH, SCREEN_HEIGHT)?;
 
         Ok(())
     }
-
 
     fn init_palette() -> [u32; 256] {
         let mut palette: [u32; 256] = [0; 256];

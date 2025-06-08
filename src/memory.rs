@@ -15,7 +15,7 @@ impl Memory {
 
     #[inline(always)]
     pub fn copy_from(&mut self, offset: usize, rom: &[u8]) {
-        self.data[offset..offset+rom.len()].copy_from_slice(rom);
+        self.data[offset..offset + rom.len()].copy_from_slice(rom);
     }
 
     #[inline(always)]
