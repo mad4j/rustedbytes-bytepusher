@@ -27,8 +27,7 @@ impl VirtualMachine {
 
         self.cpu.frame_tick();
 
-        self.audio_handler
-            .append_buffer_to_sink();
+        self.audio_handler.append_samples();
 
         let new_frame = self.cpu.get_screen_buffer();
         self.screen_handler.render(&new_frame);

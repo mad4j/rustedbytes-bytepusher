@@ -46,7 +46,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let memory = Rc::new(RefCell::new(Memory::new(cpu::MEMORY_SIZE)));
 
     let cpu = Cpu::new(Rc::clone(&memory));
-    let audio_handler = AudioHandler::new(Rc::clone(&memory), cpu::AUDIO_REGISTER_ADDR, Rc::clone(&sink));
+    let audio_handler = AudioHandler::new(
+        cpu::AUDIO_REGISTER_ADDR,
+        Rc::clone(&memory),
+        Rc::clone(&sink),
+    );
     let keyboard_handler = KeyboardHandler::new(
         cpu::KEYBOARD_REGISTER_ADDR,
         Rc::clone(&window),

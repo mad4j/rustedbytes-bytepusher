@@ -24,13 +24,17 @@ impl Default for AudioConfig {
 
 pub struct AudioHandler {
     config: AudioConfig,
-    memory: Rc<RefCell<Memory>>,
     memory_register_addr: usize,
+    memory: Rc<RefCell<Memory>>,
     sink: Rc<RefCell<Sink>>,
 }
 
 impl AudioHandler {
-    pub fn new(memory: Rc<RefCell<Memory>>, memory_register_addr: usize, sink: Rc<RefCell<Sink>>) -> Self {
+    pub fn new(
+        memory_register_addr: usize,
+        memory: Rc<RefCell<Memory>>,
+        sink: Rc<RefCell<Sink>>,
+    ) -> Self {
         Self {
             config: AudioConfig::default(),
             memory,
@@ -40,7 +44,7 @@ impl AudioHandler {
     }
 
     /// Recupera il buffer dalla memoria e lo aggiunge al sink se contiene dati non-zero
-    pub fn append_buffer_to_sink(&self) {
+    pub fn append_samples(&self) {
         let buffer = self.get_sample_buffer();
         if buffer.iter().any(|&sample| sample != 0) {
             let source = SampleBufferSource::new(buffer, self.config.clone());
@@ -48,7 +52,6 @@ impl AudioHandler {
         }
     }
 
-    
     pub fn get_sample_buffer(&self) -> [u8; AUDIO_BUFFER_SIZE] {
         let mem = self.memory.borrow();
         let audio_addr = (mem.read_16_bits(self.memory_register_addr) as usize) << 8;
@@ -57,7 +60,6 @@ impl AudioHandler {
         arr.copy_from_slice(sample_buffer);
         arr
     }
-
 }
 
 /// Sorgente audio per buffer a dimensione fissa
@@ -74,6 +76,11 @@ impl<const N: usize> SampleBufferSource<N> {
             index: 0,
             config,
         }
+    }
+
+    /// Converte un sample da u8 a i16 passando per i8
+    fn convert_sample(sample: u8) -> i16 {
+        (sample as i8).to_sample::<i16>()
     }
 }
 
@@ -106,15 +113,9 @@ impl<const N: usize> Iterator for SampleBufferSource<N> {
     type Item = i16;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.index >= self.buffer.len() {
-            return None;
-        }
-
-        // Conversione sicura da u8 a i8, poi a i16
-        let sample_u8 = self.buffer[self.index];
-        let sample_i8 = sample_u8 as i8; // Conversione sicura
-        self.index += 1;
-
-        Some(sample_i8.to_sample::<i16>())
+        self.buffer.get(self.index).map(|&sample| {
+            self.index += 1;
+            Self::convert_sample(sample)
+        })
     }
 }
