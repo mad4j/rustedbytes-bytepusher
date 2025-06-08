@@ -17,7 +17,6 @@ impl Default for AudioConfig {
     }
 }
 
-/// Gestore audio semplificato
 pub struct AudioHandler {
     config: AudioConfig,
 }

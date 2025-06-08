@@ -1,12 +1,27 @@
 use minifb::{Key, KeyRepeat, Window};
+use std::cell::RefCell;
+use std::rc::Rc;
+
+use crate::memory::Memory;
 
 pub struct KeyboardHandler {
     keyboard_state: u16,
+    memory: Option<Rc<RefCell<Memory>>>,
+    memory_regiter_addr: usize,
 }
 
 impl KeyboardHandler {
     pub fn new() -> Self {
-        Self { keyboard_state: 0 }
+        Self {
+            keyboard_state: 0,
+            memory: None,
+            memory_regiter_addr: 0,
+        }
+    }
+
+    pub fn attach_memory(&mut self, memory: Rc<RefCell<Memory>>, memory_register_addr: usize) {
+        self.memory = Some(memory);
+        self.memory_regiter_addr = memory_register_addr;
     }
 
     pub fn handle_events(&mut self, window: &Window) {
@@ -21,13 +36,15 @@ impl KeyboardHandler {
                 self.keyboard_state &= !(1 << hex);
             }
         }
+
+        if let Some(ref memory) = self.memory {
+            memory
+                .borrow_mut()
+                .write_16_bits(self.memory_regiter_addr, self.keyboard_state);
+        }
     }
 
-    pub fn get_keyboard_state(&self) -> u16 {
-        self.keyboard_state
-    }
-
-    fn key_to_hex(key: Key) -> Option<u8> {
+    pub fn key_to_hex(key: Key) -> Option<u8> {
         match key {
             Key::Key1 => Some(0x1),
             Key::Key2 => Some(0x2),

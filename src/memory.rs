@@ -18,9 +18,11 @@ impl Memory {
         self.data[..rom.len()].copy_from_slice(rom);
     }
 
-     #[inline(always)]
+    #[inline(always)]
     pub fn read_24_bits(&self, addr: usize) -> usize {
-        ((self.data[addr] as usize) << 16) | ((self.data[addr + 1] as usize) << 8) | (self.data[addr + 2] as usize)
+        ((self.data[addr] as usize) << 16)
+            | ((self.data[addr + 1] as usize) << 8)
+            | (self.data[addr + 2] as usize)
     }
 
     #[inline(always)]
@@ -43,7 +45,12 @@ impl Memory {
         let bytes = value.to_be_bytes();
         self.data[addr..addr + 2].copy_from_slice(&bytes);
     }
+}
 
+impl Default for Memory {
+    fn default() -> Self {
+        Self::new(64 * 1024) // Default size of 64KB
+    }
 }
 
 impl Index<usize> for Memory {
@@ -71,7 +78,6 @@ impl IndexMut<Range<usize>> for Memory {
         &mut self.data[index]
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -109,7 +115,7 @@ mod tests {
         mem[1] = 0x34;
         mem[2] = 0x56;
 
-        assert_eq!( mem.read_24_bits(0), 0x123456);
+        assert_eq!(mem.read_24_bits(0), 0x123456);
     }
 
     #[test]
@@ -127,7 +133,7 @@ mod tests {
 
         assert_eq!(mem.data[0], 0xAB);
         assert_eq!(mem.data[1], 0xCD);
-    }    
+    }
 
     #[test]
     fn test_indexing_read() {

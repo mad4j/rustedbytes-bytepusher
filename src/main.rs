@@ -14,6 +14,7 @@ use crate::{
     audio::AudioHandler,
     cpu::{Cpu, SCREEN_HEIGHT, SCREEN_WIDTH},
     keyboard::KeyboardHandler,
+    memory::Memory,
 };
 
 /// BytePusher VM
@@ -39,13 +40,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (_stream, stream_handle) = OutputStream::try_default()?;
     let sink = Sink::try_new(&stream_handle)?;
 
-    let mut cpu = Cpu::default();
+    use std::cell::RefCell;
+    use std::rc::Rc;
+
+    let memory = Rc::new(RefCell::new(Memory::new(cpu::MEMORY_SIZE)));
+
+    let cpu = Cpu::new(Rc::clone(&memory));
     let audio_handler = AudioHandler::new();
-    let keyboard_handler = KeyboardHandler::new();
+    let mut keyboard_handler = KeyboardHandler::new();
     let screen_handler = screen::ScreenHandler::new();
 
+    keyboard_handler.attach_memory(Rc::clone(&memory), cpu::KEYBOARD_REGISTER_ADDR);
+
     let rom_as_vec = fs::read(&args.rom)?;
-    cpu.memory.load_rom(&rom_as_vec);
+    memory.borrow_mut().load_rom(&rom_as_vec);
 
     let frame_duration = std::time::Duration::from_millis(16);
 
