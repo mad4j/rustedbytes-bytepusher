@@ -26,6 +26,8 @@ flowchart TD
     Screen[screen.rs<br/>Framebuffer Rendering]
     Audio[audio.rs<br/>Audio Output]
     Keyboard[keyboard.rs<br/>Keyboard Input]
+    minifb[minifb crate<br/>Window and Framebuffer]
+    rodio[rodio crate<br/>Audio Output]
 
     Main --> VM
     Main --> minifb
@@ -39,6 +41,9 @@ flowchart TD
     Screen --> Memory
     Audio --> Memory
     Keyboard --> VM
+    Keyboard --> minifb
+    Audio --> rodio
+    Screen --> minifb
 ```
 
 This project implements the BytePusher VM in Rust, using:
