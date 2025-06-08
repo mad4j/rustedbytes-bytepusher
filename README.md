@@ -17,6 +17,30 @@ For more details on the BytePusher VM specification, see the references below.
 
 ## Implementation
 
+```mermaid
+flowchart TD
+    Main[main.rs<br/>Application Entry Point]
+    VM[vm.rs<br/>Virtual Machine Orchestration]
+    CPU[cpu.rs<br/>CPU Logic]
+    Memory[memory.rs<br/>Memory Management]
+    Screen[screen.rs<br/>Framebuffer Rendering]
+    Audio[audio.rs<br/>Audio Output]
+    Keyboard[keyboard.rs<br/>Keyboard Input]
+
+    Main --> VM
+    Main --> minifb
+    Main --> rodio
+    VM --> CPU
+    VM --> Memory
+    VM --> Screen
+    VM --> Audio
+    VM --> Keyboard
+    CPU --> Memory
+    Screen --> Memory
+    Audio --> Memory
+    Keyboard --> VM
+```
+
 This project implements the BytePusher VM in Rust, using:
 
 - **minifb** for window and video framebuffer management
