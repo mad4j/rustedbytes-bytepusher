@@ -4,10 +4,13 @@ version = "0.1.0"
 edition = "2024"
 authors = ["Daniele Olmisani <daniele.olmisani@gmail.com>"]
 description = "A complete BytePusher virtual machine implementation in Rust"
+license = "GPL-3.0"
+repository = "https://github.com/mad4j/rustedbytes-bytepusher"
+homepage = "https://github.com/mad4j/rustedbytes-bytepusher"
 readme = "README.md"
-license = "MIT"
 keywords = ["vm", "emulator", "bytepusher"]
 categories = ["emulators"]
+exclude = ["/roms"]
 
 [dependencies]
 clap = { version = "4", features = ["derive"] }
