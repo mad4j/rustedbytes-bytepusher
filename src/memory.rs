@@ -14,8 +14,8 @@ impl Memory {
     }
 
     #[inline(always)]
-    pub fn load_rom(&mut self, rom: &[u8]) {
-        self.data[..rom.len()].copy_from_slice(rom);
+    pub fn copy_from(&mut self, offset: usize, rom: &[u8]) {
+        self.data[offset..offset+rom.len()].copy_from_slice(rom);
     }
 
     #[inline(always)]
@@ -94,7 +94,7 @@ mod tests {
     fn test_load_rom() {
         let mut mem = Memory::new(16);
         let rom = [1u8, 2, 3, 4];
-        mem.load_rom(&rom);
+        mem.copy_from(0, &rom);
         assert_eq!(&mem.data[..4], &rom);
     }
 
