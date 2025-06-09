@@ -1,10 +1,10 @@
 use minifb::Window;
 use rodio::Sink;
 use spin_sleep::SpinSleeper;
-use thread_priority::{set_current_thread_priority, ThreadPriority};
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::time::{Duration, Instant};
+use thread_priority::{ThreadPriority, set_current_thread_priority};
 
 use crate::audio::AudioHandler;
 use crate::cpu::Cpu;
@@ -28,7 +28,6 @@ pub const AUDIO_REGISTER_ADDR: usize = 0x000006;
 
 pub const FRAME_RATE: u32 = 60; // 60 frames per second
 
-
 /// VirtualMachine struct encapsulates the components of the BytePusher VM.
 /// It includes the CPU, memory, audio handler, keyboard handler, and screen handler.
 pub struct VirtualMachine {
@@ -41,26 +40,21 @@ pub struct VirtualMachine {
     pub screen_handler: ScreenHandler,
 }
 
-
 /// Implementation of the VirtualMachine
 /// This struct encapsulates the VM's components and provides methods to load ROMs and process frames.
 /// It includes the CPU, memory, audio handler, keyboard handler, and screen handler.
 impl VirtualMachine {
-    pub fn new(
-        window: Rc<RefCell<Window>>,
-        sink: Rc<RefCell<Sink>>,
-    ) -> Self {
-
+    pub fn new(window: Rc<RefCell<Window>>, sink: Rc<RefCell<Sink>>) -> Self {
         // Initialize the memory with a size of MEMORY_SIZE
         let memory = Rc::new(RefCell::new(Memory::new(MEMORY_SIZE)));
-        
+
         // Initialize the CPU with the memory
         let cpu = Cpu::new(Rc::clone(&memory));
-        
+
         // Initialize the audio handler with the memory and sink
         let audio_handler =
             AudioHandler::new(AUDIO_REGISTER_ADDR, Rc::clone(&memory), Rc::clone(&sink));
-        
+
         // Initialize the keyboard handler with the memory and window
         let keyboard_handler = KeyboardHandler::new(
             KEYBOARD_REGISTER_ADDR,
@@ -93,7 +87,6 @@ impl VirtualMachine {
 
     /// Process a single frame of the VM, handling input, CPU ticks, audio, and rendering.
     pub fn process_frame(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-
         // Handle keyboard events
         self.keyboard_handler.handle_events();
 
@@ -110,10 +103,9 @@ impl VirtualMachine {
     }
 
     pub fn run(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-
         set_current_thread_priority(ThreadPriority::Max)?;
 
-        let frame_duration= Duration::from_secs_f64(1.0 / FRAME_RATE as f64);
+        let frame_duration = Duration::from_secs_f64(1.0 / FRAME_RATE as f64);
         let sleeper = SpinSleeper::default();
 
         let mut next_frame = Instant::now() + frame_duration;
@@ -128,11 +120,14 @@ impl VirtualMachine {
             if now < next_frame {
                 sleeper.sleep(next_frame - now);
             } else {
-                eprintln!("Frame took too long: {:.02?}", frame_duration + (now - next_frame));
+                eprintln!(
+                    "Frame took too long: {:.02?}",
+                    frame_duration + (now - next_frame)
+                );
             }
             next_frame += frame_duration;
         }
-        
+
         Ok(())
     }
 }
