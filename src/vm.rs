@@ -1,5 +1,7 @@
 use minifb::Window;
 use rodio::Sink;
+use spin_sleep::SpinSleeper;
+use thread_priority::{set_current_thread_priority, ThreadPriority};
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::time::{Duration, Instant};
@@ -24,6 +26,9 @@ pub const PROGRAM_COUNTER_ADDR: usize = 0x000002;
 pub const SCREEN_REGISTER_ADDR: usize = 0x000005;
 pub const AUDIO_REGISTER_ADDR: usize = 0x000006;
 
+pub const FRAME_RATE: u32 = 60; // 60 frames per second
+
+
 /// VirtualMachine struct encapsulates the components of the BytePusher VM.
 /// It includes the CPU, memory, audio handler, keyboard handler, and screen handler.
 pub struct VirtualMachine {
@@ -34,7 +39,6 @@ pub struct VirtualMachine {
     pub audio_handler: AudioHandler,
     pub keyboard_handler: KeyboardHandler,
     pub screen_handler: ScreenHandler,
-    pub frame_duration: Duration,
 }
 
 
@@ -45,7 +49,6 @@ impl VirtualMachine {
     pub fn new(
         window: Rc<RefCell<Window>>,
         sink: Rc<RefCell<Sink>>,
-        frame_duration: Duration,
     ) -> Self {
 
         // Initialize the memory with a size of MEMORY_SIZE
@@ -68,7 +71,7 @@ impl VirtualMachine {
         // Initialize the screen handler with the memory and window
         let screen_handler =
             ScreenHandler::new(SCREEN_REGISTER_ADDR, Rc::clone(&memory), Rc::clone(&window));
-        
+
         // Return the new VirtualMachine instance
         Self {
             _window: window,
@@ -78,7 +81,6 @@ impl VirtualMachine {
             audio_handler,
             keyboard_handler,
             screen_handler,
-            frame_duration,
         }
     }
 
@@ -92,9 +94,6 @@ impl VirtualMachine {
     /// Process a single frame of the VM, handling input, CPU ticks, audio, and rendering.
     pub fn process_frame(&mut self) -> Result<(), Box<dyn std::error::Error>> {
 
-        // Measure the time taken for the frame processing
-        let start = Instant::now();
-
         // Handle keyboard events
         self.keyboard_handler.handle_events();
 
@@ -107,15 +106,33 @@ impl VirtualMachine {
         // Render the screen frame
         self.screen_handler.render_frame()?;
 
-        // wait for the next frame duration
-        // This is to ensure that each frame takes approximately the same amount of time
-        let elapsed = start.elapsed();
-        if elapsed < self.frame_duration {
-            std::thread::sleep(self.frame_duration - elapsed);
-        } else {
-            eprintln!("Frame took too long: {:?}", elapsed);
-        }
+        Ok(())
+    }
 
+    pub fn run(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+
+        set_current_thread_priority(ThreadPriority::Max)?;
+
+        let frame_duration= Duration::from_secs_f64(1.0 / FRAME_RATE as f64);
+        let sleeper = SpinSleeper::default();
+
+        let mut next_frame = Instant::now() + frame_duration;
+
+        // Main loop for the VM
+        while self._window.borrow().is_open()
+            && !self._window.borrow().is_key_down(minifb::Key::Escape)
+        {
+            self.process_frame()?;
+
+            let now = Instant::now();
+            if now < next_frame {
+                sleeper.sleep(next_frame - now);
+            } else {
+                eprintln!("Frame took too long: {:.02?}", frame_duration + (now - next_frame));
+            }
+            next_frame += frame_duration;
+        }
+        
         Ok(())
     }
 }

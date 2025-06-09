@@ -1,5 +1,5 @@
 use clap::Parser;
-use minifb::{Key, Scale, Window, WindowOptions};
+use minifb::{Scale, Window, WindowOptions};
 use rodio::{OutputStream, Sink};
 
 use std::cell::RefCell;
@@ -39,13 +39,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (_stream, stream_handle) = OutputStream::try_default()?;
     let sink = Rc::new(RefCell::new(Sink::try_new(&stream_handle)?));
 
-    let frame_duration = std::time::Duration::from_millis(16);
-    let mut vm = vm::VirtualMachine::new(Rc::clone(&window), Rc::clone(&sink), frame_duration);
+    let mut vm = vm::VirtualMachine::new(Rc::clone(&window), Rc::clone(&sink));
 
     vm.load_rom(&args.rom)?;
+    vm.run()?;
 
-    while window.borrow().is_open() && !window.borrow().is_key_down(Key::Escape) {
-        vm.process_frame()?;
-    }
+    //while window.borrow().is_open() && !window.borrow().is_key_down(Key::Escape) {
+    //    vm.process_frame()?;
+    //}
     Ok(())
 }
