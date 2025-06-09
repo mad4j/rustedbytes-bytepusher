@@ -103,6 +103,8 @@ impl VirtualMachine {
     }
 
     pub fn run(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+
+        // Set the thread priority to maximum for better performance
         set_current_thread_priority(ThreadPriority::Max)?;
 
         let frame_duration = Duration::from_secs_f64(1.0 / FRAME_RATE as f64);
