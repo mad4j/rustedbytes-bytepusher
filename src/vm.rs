@@ -4,7 +4,6 @@ use spin_sleep::SpinSleeper;
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::time::{Duration, Instant};
-use thread_priority::{ThreadPriority, set_current_thread_priority};
 
 use crate::audio::AudioHandler;
 use crate::cpu::Cpu;
@@ -103,9 +102,6 @@ impl VirtualMachine {
     }
 
     pub fn run(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-
-        // Set the thread priority to maximum for better performance
-        set_current_thread_priority(ThreadPriority::Max)?;
 
         let frame_duration = Duration::from_secs_f64(1.0 / FRAME_RATE as f64);
         let sleeper = SpinSleeper::default();
