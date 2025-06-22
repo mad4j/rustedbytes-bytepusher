@@ -102,18 +102,20 @@ impl VirtualMachine {
     }
 
     pub fn run(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-
         let frame_duration = Duration::from_secs_f64(1.0 / FRAME_RATE as f64);
         let sleeper = SpinSleeper::default();
-
         let mut next_frame = Instant::now() + frame_duration;
-
+        let mut screenshot_index = 1;
         // Main loop for the VM
         while self._window.borrow().is_open()
             && !self._window.borrow().is_key_down(minifb::Key::Escape)
         {
             self.process_frame()?;
-
+            // Salva screenshot se il tasto S è premuto
+            if self._window.borrow().is_key_pressed(minifb::Key::S, minifb::KeyRepeat::No) {
+                self.screen_handler.save_screen_png(screenshot_index)?;
+                screenshot_index += 1;
+            }
             let now = Instant::now();
             if now < next_frame {
                 sleeper.sleep(next_frame - now);
@@ -125,7 +127,6 @@ impl VirtualMachine {
             }
             next_frame += frame_duration;
         }
-
         Ok(())
     }
 }

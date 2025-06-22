@@ -4,6 +4,7 @@ use crate::{
     memory::Memory,
     vm::{SCREEN_BUFFER_SIZE, SCREEN_HEIGHT, SCREEN_WIDTH},
 };
+use image::{ImageBuffer, Rgb};
 
 pub struct ScreenHandler {
     pub palette: [u32; 256],
@@ -44,6 +45,23 @@ impl ScreenHandler {
             .borrow_mut()
             .update_with_buffer(&screen, SCREEN_WIDTH, SCREEN_HEIGHT)?;
 
+        Ok(())
+    }
+
+    pub fn save_screen_png(&self, file_index: u32) -> Result<(), Box<dyn std::error::Error>> {
+        let buffer = self.get_screen_buffer();
+        let mut img_buf = ImageBuffer::new(SCREEN_WIDTH as u32, SCREEN_HEIGHT as u32);
+        for (i, pixel) in buffer.iter().enumerate() {
+            let color = self.palette[*pixel as usize];
+            let r = ((color >> 16) & 0xFF) as u8;
+            let g = ((color >> 8) & 0xFF) as u8;
+            let b = (color & 0xFF) as u8;
+            let x = (i % SCREEN_WIDTH) as u32;
+            let y = (i / SCREEN_WIDTH) as u32;
+            img_buf.put_pixel(x, y, Rgb([r, g, b]));
+        }
+        let filename = format!("screenshot_{:04}.png", file_index);
+        img_buf.save(&filename)?;
         Ok(())
     }
 
