@@ -8,7 +8,7 @@ The BytePusher VM is a minimalist virtual machine, created to be easy to impleme
 
 Main features of the BytePusher VM:
 
-- 16 MB linear memory
+- 16 MiB linear memory
 - Color video framebuffer (typically 256x256 pixels)
 - 8-bit audio
 - No conditional instructions: only copy and jump operations
