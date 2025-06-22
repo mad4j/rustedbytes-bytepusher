@@ -38,7 +38,17 @@ The project structure is modular:
 To run a BytePusher ROM:
 
 ```sh
-cargo run --release -- <rom.ByptePusher>
+cargo run --release -- <rom.BytePusher> [--scale <fattore>]
+```
+
+### Opzioni
+
+- `--scale <fattore>`: imposta il fattore di scaling della finestra (valori ammessi: 1, 2, 4, 8). Il valore predefinito è 2.
+
+Esempio:
+
+```sh
+cargo run --release -- roms/Nyan.BytePusher --scale 4
 ```
 
 ## References
