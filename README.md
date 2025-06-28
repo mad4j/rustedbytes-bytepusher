@@ -8,7 +8,7 @@ The BytePusher VM is a minimalist virtual machine, created to be easy to impleme
 
 Main features of the BytePusher VM:
 
-- 16 MB linear memory
+- 16 MiB linear memory
 - Color video framebuffer (typically 256x256 pixels)
 - 8-bit audio
 - No conditional instructions: only copy and jump operations
@@ -43,12 +43,12 @@ cargo run --release -- <rom.BytePusher> [--scale <fattore>]
 
 ### Opzioni
 
-- `--scale <fattore>`: imposta il fattore di scaling della finestra (valori ammessi: 1, 2, 4, 8). Il valore predefinito è 2.
+- `--scale <fattore>`: imposta il fattore di scaling della finestra (valori ammessi: 1, 2). Il valore predefinito è 1.
 
 Esempio:
 
 ```sh
-cargo run --release -- roms/Nyan.BytePusher --scale 4
+cargo run --release -- roms/Nyan.BytePusher --scale 2
 ```
 
 ## References
