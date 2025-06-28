@@ -1,5 +1,7 @@
 # RustedBytes - A BytePusher VM in Rust
 
+![Logo](resources/logo-128x128.png)
+
 RustedBytes-BytePuhser is a Rust implementation of the BytePusher Virtual Machine, a simple virtual computer architecture designed for demoscene programming and low-level system experimentation.
 
 ## What is the BytePusher VM?
