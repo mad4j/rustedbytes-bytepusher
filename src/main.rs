@@ -15,17 +15,18 @@ mod vm;
 use crate::vm::SCREEN_HEIGHT;
 use crate::vm::SCREEN_WIDTH;
 
-/// BytePusher VM
+/// Command-line arguments for the BytePusher VM
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    /// Percorso del file ROM BytePusher
+    /// File path of ROM BytePusher
     rom: String,
-    /// Fattore di scaling della finestra (1, 2)
+    /// Window scaling factor (1, 2)
     #[arg(long, default_value_t = 1)]
     scale: u32,
 }
 
+/// Main function to run the BytePusher VM
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
