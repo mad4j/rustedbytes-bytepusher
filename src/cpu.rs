@@ -32,7 +32,7 @@ impl Cpu {
         let pc = self.program_counter;
         let memory = &mut *self.memory.borrow_mut();
 
-        // Fetch instruction operands (addresses)
+        // Fetch addresses of instruction operands
         let (addr_a, addr_b) = (
             memory.read_24_bits(pc),
             memory.read_24_bits(pc + 3),
