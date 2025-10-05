@@ -28,15 +28,21 @@ impl Cpu {
 
     #[inline(always)]
     fn execute_instruction(&mut self) {
+        // needed to reduce borrow checker issues
         let pc = self.program_counter;
         let memory = &mut *self.memory.borrow_mut();
-        let (addr_a, addr_b, addr_jump) = (
+
+        // Fetch addresses of instruction operands
+        let (addr_a, addr_b) = (
             memory.read_24_bits(pc),
             memory.read_24_bits(pc + 3),
-            memory.read_24_bits(pc + 6),
         );
+
+        // Execute the assignment instruction
         memory[addr_b] = memory[addr_a];
-        self.program_counter = addr_jump;
+
+        // Execute the jump instruction
+        self.program_counter = memory.read_24_bits(pc + 6);
     }
 
     #[inline(always)]
