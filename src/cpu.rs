@@ -38,10 +38,10 @@ impl Cpu {
             memory.read_24_bits(pc + 3),
         );
 
-        // Execute the instruction (only one instruction for now)
+        // Execute the assignment instruction
         memory[addr_b] = memory[addr_a];
 
-        // Move to the next instruction
+        // Execute the jump instruction
         self.program_counter = memory.read_24_bits(pc + 6);
     }
 
